@@ -1,0 +1,558 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
+  <title>Wooden Knights · Margin Calculator V2</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+    body {
+      min-height: 100vh;
+      background: #0d0d0d;
+      font-family: 'Georgia', 'Times New Roman', serif;
+      display: flex;
+      justify-content: center;
+      padding: 40px 20px 80px;
+      position: relative;
+      overflow-x: hidden;
+    }
+
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      opacity: 0.03;
+      background-image:
+        repeating-linear-gradient(0deg, #fff 0px, #fff 1px, transparent 1px, transparent 40px),
+        repeating-linear-gradient(90deg, #fff 0px, #fff 1px, transparent 1px, transparent 40px);
+      pointer-events: none;
+    }
+
+    .container { width: 100%; max-width: 620px; position: relative; z-index: 1; }
+
+    /* Header */
+    .header { margin-bottom: 36px; border-left: 3px solid #c9a96e; padding-left: 20px; }
+    .header .brand { font-size: 11px; letter-spacing: 6px; color: #c9a96e; text-transform: uppercase; margin-bottom: 8px; }
+    .header h1 { font-size: 30px; font-weight: 400; color: #f0ece4; line-height: 1.2; }
+    .header p { margin-top: 6px; font-size: 12px; color: #666; letter-spacing: 1px; }
+
+    /* Global Settings */
+    .global-card {
+      background: #161616;
+      border: 1px solid #2a2a2a;
+      border-radius: 2px;
+      padding: 24px 28px;
+      margin-bottom: 24px;
+    }
+
+    .global-title {
+      font-size: 9px; letter-spacing: 5px; color: #c9a96e;
+      text-transform: uppercase; margin-bottom: 16px;
+    }
+
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+
+    label {
+      display: block; font-size: 9px; letter-spacing: 4px;
+      color: #c9a96e; text-transform: uppercase; margin-bottom: 8px;
+    }
+
+    .input-wrap { position: relative; }
+
+    .prefix {
+      position: absolute; left: 12px; top: 50%; transform: translateY(-50%);
+      color: #666; font-size: 16px; pointer-events: none;
+    }
+
+    .suffix {
+      position: absolute; right: 12px; top: 50%; transform: translateY(-50%);
+      color: #666; font-size: 14px; pointer-events: none;
+    }
+
+    input[type="text"], input[type="number"] {
+      width: 100%; background: #0d0d0d; border: 1px solid #333;
+      border-radius: 2px; color: #f0ece4; font-family: 'Georgia', serif;
+      outline: none; transition: border-color 0.2s;
+      -webkit-appearance: none; appearance: none;
+    }
+
+    input[type="text"] { padding: 11px 12px 11px 28px; font-size: 20px; }
+    input[type="number"] { padding: 11px 32px 11px 12px; font-size: 18px; }
+    input.plain { padding: 11px 12px; font-size: 15px; }
+    input:focus { border-color: #c9a96e; }
+    input[type="number"]::-webkit-inner-spin-button,
+    input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; }
+
+    /* Areas */
+    .areas-wrap { display: flex; flex-direction: column; gap: 16px; margin-bottom: 24px; }
+
+    .area-card {
+      background: #161616; border: 1px solid #2a2a2a;
+      border-radius: 2px; overflow: hidden;
+      transition: border-color 0.2s;
+    }
+
+    .area-header {
+      display: flex; align-items: center; gap: 12px;
+      padding: 16px 20px; border-bottom: 1px solid #1e1e1e;
+      background: #181818;
+    }
+
+    .area-name-input {
+      flex: 1; background: transparent; border: none;
+      color: #f0ece4; font-family: 'Georgia', serif;
+      font-size: 15px; outline: none; letter-spacing: 1px;
+      padding: 0;
+    }
+
+    .area-name-input::placeholder { color: #444; }
+
+    .area-num {
+      font-size: 9px; letter-spacing: 3px; color: #555;
+      text-transform: uppercase; white-space: nowrap;
+    }
+
+    .remove-btn {
+      background: none; border: none; color: #444;
+      cursor: pointer; font-size: 18px; line-height: 1;
+      padding: 0 0 0 8px; transition: color 0.2s;
+    }
+    .remove-btn:hover { color: #c06060; }
+
+    .area-inputs { padding: 16px 20px; display: flex; flex-direction: column; gap: 14px; }
+
+    .area-cost-row { display: flex; align-items: flex-end; gap: 12px; }
+    .area-cost-row .input-wrap { flex: 1; }
+
+    /* Toggle */
+    .toggle-row {
+      display: flex; align-items: center; gap: 10px;
+      padding: 10px 20px; background: #111; border-top: 1px solid #1e1e1e;
+    }
+
+    .toggle-label { font-size: 9px; letter-spacing: 3px; color: #555; text-transform: uppercase; flex: 1; }
+
+    .toggle {
+      position: relative; width: 36px; height: 20px; cursor: pointer;
+    }
+    .toggle input { opacity: 0; width: 0; height: 0; }
+    .toggle-track {
+      position: absolute; inset: 0; background: #2a2a2a;
+      border-radius: 20px; transition: background 0.2s;
+    }
+    .toggle input:checked + .toggle-track { background: #c9a96e44; }
+    .toggle-thumb {
+      position: absolute; top: 3px; left: 3px;
+      width: 14px; height: 14px; border-radius: 50%;
+      background: #444; transition: transform 0.2s, background 0.2s;
+    }
+    .toggle input:checked ~ .toggle-thumb { transform: translateX(16px); background: #c9a96e; }
+
+    .area-overrides {
+      padding: 14px 20px; border-top: 1px solid #1e1e1e;
+      display: none;
+    }
+    .area-overrides.visible { display: block; }
+
+    /* Area Results */
+    .area-results {
+      border-top: 1px solid #1e1e1e;
+      display: none;
+    }
+    .area-results.visible { display: block; }
+
+    .res-row {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 11px 20px; border-bottom: 1px solid #141414;
+    }
+
+    .res-row.res-bold { background: #1a1a1a; border-bottom: 1px solid #c9a96e22; }
+
+    .res-label { font-size: 9px; letter-spacing: 3px; text-transform: uppercase; color: #444; margin-bottom: 1px; }
+    .res-value { font-family: 'Georgia', serif; }
+    .res-pct { font-family: 'Georgia', serif; min-width: 50px; text-align: right; }
+
+    .area-grand {
+      padding: 14px 20px;
+      background: linear-gradient(135deg, #191410, #161616);
+      display: flex; align-items: center; justify-content: space-between;
+    }
+
+    .area-grand-label { font-size: 9px; letter-spacing: 4px; color: #c9a96e; text-transform: uppercase; margin-bottom: 2px; }
+    .area-grand-value { font-size: 24px; color: #f0ece4; font-family: 'Georgia', serif; }
+
+    .mini-badge {
+      width: 48px; height: 48px; border-radius: 50%;
+      border: 1px solid #c9a96e33;
+      display: flex; align-items: center; justify-content: center;
+      flex-direction: column; flex-shrink: 0;
+    }
+    .mini-badge-pct { font-size: 13px; color: #c9a96e; font-family: 'Georgia', serif; }
+    .mini-badge-label { font-size: 7px; letter-spacing: 2px; color: #555; text-transform: uppercase; }
+
+    /* Add Area Button */
+    .add-btn {
+      width: 100%; padding: 14px; background: transparent;
+      border: 1px dashed #2a2a2a; border-radius: 2px;
+      color: #444; font-family: 'Georgia', serif; font-size: 13px;
+      letter-spacing: 3px; text-transform: uppercase; cursor: pointer;
+      transition: border-color 0.2s, color 0.2s; margin-bottom: 32px;
+    }
+    .add-btn:hover { border-color: #c9a96e66; color: #c9a96e; }
+
+    /* Summary */
+    .summary {
+      background: #161616; border: 1px solid #2a2a2a;
+      border-radius: 2px; overflow: hidden; margin-bottom: 32px;
+    }
+
+    .summary-title {
+      padding: 16px 28px; border-bottom: 1px solid #2a2a2a;
+      font-size: 9px; letter-spacing: 5px; color: #c9a96e; text-transform: uppercase;
+    }
+
+    .sum-row {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 14px 28px; border-bottom: 1px solid #1a1a1a;
+    }
+
+    .sum-label { font-size: 9px; letter-spacing: 3px; color: #555; text-transform: uppercase; }
+    .sum-value { font-family: 'Georgia', serif; font-size: 18px; }
+
+    .sum-grand {
+      padding: 22px 28px;
+      background: linear-gradient(135deg, #1a1510, #161616);
+      display: flex; align-items: center; justify-content: space-between;
+    }
+
+    .sum-grand-label { font-size: 10px; letter-spacing: 5px; color: #c9a96e; text-transform: uppercase; margin-bottom: 4px; }
+    .sum-grand-value { font-size: 36px; color: #f0ece4; font-family: 'Georgia', serif; font-weight: 400; }
+
+    .sum-badge {
+      width: 64px; height: 64px; border-radius: 50%;
+      border: 2px solid #c9a96e33;
+      display: flex; align-items: center; justify-content: center;
+      flex-direction: column; flex-shrink: 0;
+    }
+    .sum-badge-pct { font-size: 18px; color: #c9a96e; font-family: 'Georgia', serif; }
+    .sum-badge-label { font-size: 8px; letter-spacing: 2px; color: #555; text-transform: uppercase; }
+
+    .footer {
+      text-align: center; font-size: 10px; letter-spacing: 3px;
+      color: #2a2a2a; text-transform: uppercase;
+    }
+
+    @media (max-width: 480px) {
+      body { padding: 24px 14px 60px; }
+      .header h1 { font-size: 24px; }
+      .global-card { padding: 20px 16px; }
+      .area-inputs { padding: 14px 16px; }
+      .area-header { padding: 14px 16px; }
+      .area-grand { padding: 12px 16px; }
+      .area-grand-value { font-size: 20px; }
+      .sum-grand-value { font-size: 28px; }
+      .sum-grand { padding: 18px 20px; }
+      .sum-row { padding: 12px 20px; }
+      .summary-title { padding: 14px 20px; }
+      .res-row { padding: 10px 16px; }
+      .toggle-row { padding: 10px 16px; }
+      .area-overrides { padding: 12px 16px; }
+    }
+  </style>
+</head>
+<body>
+<div class="container">
+
+  <div class="header">
+    <div class="brand">Wooden Knights</div>
+    <h1>Margin Calculator <span style="font-size:14px;color:#555;letter-spacing:3px;">V2</span></h1>
+    <p>Custom Cabinetry · Multi-Area Pricing Tool</p>
+  </div>
+
+  <!-- Global Settings -->
+  <div class="global-card">
+    <div class="global-title">Global Settings</div>
+    <div class="grid-2">
+      <div>
+        <label>Global Margin</label>
+        <div class="input-wrap">
+          <input type="number" id="g-margin" value="40" min="1" max="99" step="1" oninput="recalcAll()" />
+          <span class="suffix">%</span>
+        </div>
+      </div>
+      <div>
+        <label>Global Sales Tax</label>
+        <div class="input-wrap">
+          <input type="number" id="g-tax" value="8.375" min="0" max="20" step="0.001" oninput="recalcAll()" />
+          <span class="suffix">%</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Areas -->
+  <div class="areas-wrap" id="areas-wrap"></div>
+
+  <button class="add-btn" onclick="addArea()">+ Add Area</button>
+
+  <!-- Summary -->
+  <div class="summary" id="summary" style="display:none;">
+    <div class="summary-title">Project Summary</div>
+    <div class="sum-row">
+      <div class="sum-label">Total Cost</div>
+      <div class="sum-value" id="sum-cost" style="color:#888;"></div>
+    </div>
+    <div class="sum-row">
+      <div class="sum-label">Total Profit</div>
+      <div class="sum-value" id="sum-profit" style="color:#4caf7d;"></div>
+    </div>
+    <div class="sum-row">
+      <div class="sum-label">Total Sell Price</div>
+      <div class="sum-value" id="sum-sell" style="color:#f0ece4;"></div>
+    </div>
+    <div class="sum-row">
+      <div class="sum-label">Total Sales Tax</div>
+      <div class="sum-value" id="sum-tax" style="color:#c9a96e;"></div>
+    </div>
+    <div class="sum-grand">
+      <div>
+        <div class="sum-grand-label">Grand Total</div>
+        <div class="sum-grand-value" id="sum-grand"></div>
+      </div>
+      <div class="sum-badge">
+        <div class="sum-badge-pct" id="sum-margin-badge"></div>
+        <div class="sum-badge-label">margin</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="footer">Wooden Knights Custom Cabinetry · Las Vegas, NV</div>
+</div>
+
+<script>
+  let areaCounter = 0;
+  const areas = {};
+
+  function fmt(v) {
+    return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(v);
+  }
+
+  function fmtP(v, d) {
+    return v.toFixed(d !== undefined ? d : (v % 1 === 0 ? 0 : 1)) + '%';
+  }
+
+  function getGlobal() {
+    return {
+      margin: parseFloat(document.getElementById('g-margin').value) / 100,
+      tax: parseFloat(document.getElementById('g-tax').value) / 100
+    };
+  }
+
+  function addArea() {
+    areaCounter++;
+    const id = areaCounter;
+    areas[id] = { useGlobal: true };
+
+    const wrap = document.getElementById('areas-wrap');
+    const div = document.createElement('div');
+    div.className = 'area-card';
+    div.id = 'area-' + id;
+    div.innerHTML = `
+      <div class="area-header">
+        <span class="area-num">Area ${id}</span>
+        <input class="area-name-input" type="text" placeholder="e.g. Kitchen, Master Bath…" oninput="recalcAll()" />
+        <button class="remove-btn" onclick="removeArea(${id})" title="Remove">×</button>
+      </div>
+      <div class="area-inputs">
+        <div class="area-cost-row">
+          <div>
+            <label>Product Cost</label>
+            <div class="input-wrap">
+              <span class="prefix">$</span>
+              <input type="text" id="cost-${id}" inputmode="decimal" placeholder="0" oninput="recalcAll()" />
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="toggle-row">
+        <span class="toggle-label">Use individual margin &amp; tax</span>
+        <label class="toggle">
+          <input type="checkbox" id="toggle-${id}" onchange="toggleOverride(${id})" />
+          <div class="toggle-track"></div>
+          <div class="toggle-thumb"></div>
+        </label>
+      </div>
+
+      <div class="area-overrides" id="overrides-${id}">
+        <div class="grid-2">
+          <div>
+            <label>Margin</label>
+            <div class="input-wrap">
+              <input type="number" id="margin-${id}" value="40" min="1" max="99" step="1" oninput="recalcAll()" />
+              <span class="suffix">%</span>
+            </div>
+          </div>
+          <div>
+            <label>Sales Tax</label>
+            <div class="input-wrap">
+              <input type="number" id="tax-${id}" value="8.375" min="0" max="20" step="0.001" oninput="recalcAll()" />
+              <span class="suffix">%</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="area-results" id="results-${id}">
+        <div class="res-row">
+          <div>
+            <div class="res-label">Product Cost</div>
+            <div class="res-value" id="r-cost-${id}" style="font-size:16px;color:#888;"></div>
+          </div>
+          <div class="res-pct" id="r-pct-cost-${id}" style="font-size:13px;color:#666;"></div>
+        </div>
+
+        <div class="res-row" style="align-items:stretch; gap:12px;">
+          <div style="flex:1;">
+            <div class="res-label">Profit</div>
+            <div class="res-value" id="r-profit-${id}" style="font-size:16px;color:#4caf7d;"></div>
+          </div>
+          <div class="res-pct" id="r-pct-profit-${id}" style="font-size:13px;color:#4caf7d;opacity:0.7;align-self:center;"></div>
+          <div style="width:1px;background:#2a2a2a;margin:0 4px;"></div>
+          <div style="background:#0d0d0d;border:1px solid #2a2a2a;border-radius:2px;padding:6px 12px;display:flex;flex-direction:column;justify-content:center;align-items:center;min-width:88px;">
+            <div style="font-size:8px;letter-spacing:3px;color:#555;text-transform:uppercase;margin-bottom:3px;">Markup</div>
+            <div id="r-markup-${id}" style="font-size:14px;color:#7eb8d4;font-family:'Georgia',serif;"></div>
+            <div style="font-size:7px;letter-spacing:2px;color:#444;text-transform:uppercase;margin-top:2px;">on cost</div>
+          </div>
+        </div>
+
+        <div class="res-row res-bold">
+          <div>
+            <div class="res-label">Sell Price</div>
+            <div class="res-value" id="r-sell-${id}" style="font-size:18px;color:#f0ece4;"></div>
+          </div>
+          <div class="res-pct" style="font-size:14px;color:#f0ece4;">100%</div>
+        </div>
+
+        <div class="res-row">
+          <div>
+            <div class="res-label" id="r-tax-label-${id}">Sales Tax</div>
+            <div class="res-value" id="r-tax-${id}" style="font-size:16px;color:#c9a96e;"></div>
+          </div>
+          <div class="res-pct" id="r-pct-tax-${id}" style="font-size:13px;color:#c9a96e;opacity:0.7;"></div>
+        </div>
+
+        <div class="area-grand">
+          <div>
+            <div class="area-grand-label">Area Grand Total</div>
+            <div class="area-grand-value" id="r-grand-${id}"></div>
+          </div>
+          <div class="mini-badge">
+            <div class="mini-badge-pct" id="r-badge-${id}"></div>
+            <div class="mini-badge-label">margin</div>
+          </div>
+        </div>
+      </div>
+    `;
+
+    wrap.appendChild(div);
+    recalcAll();
+  }
+
+  function removeArea(id) {
+    const el = document.getElementById('area-' + id);
+    if (el) el.remove();
+    delete areas[id];
+    recalcAll();
+  }
+
+  function toggleOverride(id) {
+    const checked = document.getElementById('toggle-' + id).checked;
+    areas[id].useGlobal = !checked;
+    const ov = document.getElementById('overrides-' + id);
+    if (checked) ov.classList.add('visible');
+    else ov.classList.remove('visible');
+    recalcAll();
+  }
+
+  function calcArea(id) {
+    const rawCost = (document.getElementById('cost-' + id)?.value || '').replace(/[^0-9.]/g, '');
+    const c = parseFloat(rawCost);
+    const g = getGlobal();
+    const useGlobal = areas[id]?.useGlobal !== false;
+
+    const m = useGlobal ? g.margin : parseFloat(document.getElementById('margin-' + id).value) / 100;
+    const t = useGlobal ? g.tax : parseFloat(document.getElementById('tax-' + id).value) / 100;
+
+    const results = document.getElementById('results-' + id);
+
+    if (isNaN(c) || isNaN(m) || isNaN(t) || m <= 0 || m >= 1 || c <= 0) {
+      results?.classList.remove('visible');
+      return null;
+    }
+
+    const sellPrice = c / (1 - m);
+    const profit = sellPrice - c;
+    const tax = sellPrice * t;
+    const grandTotal = sellPrice + tax;
+    const marginPct = m * 100;
+    const taxPct = t * 100;
+    const costPct = (c / sellPrice) * 100;
+    const markupPct = (profit / c) * 100;
+
+    document.getElementById('r-cost-' + id).textContent = fmt(c);
+    document.getElementById('r-pct-cost-' + id).textContent = fmtP(costPct, 1);
+    document.getElementById('r-profit-' + id).textContent = fmt(profit);
+    document.getElementById('r-pct-profit-' + id).textContent = fmtP(marginPct, 1);
+    document.getElementById('r-markup-' + id).textContent = fmtP(markupPct, 1);
+    document.getElementById('r-sell-' + id).textContent = fmt(sellPrice);
+    document.getElementById('r-tax-label-' + id).textContent = 'Sales Tax (' + fmtP(taxPct, 3) + ')';
+    document.getElementById('r-tax-' + id).textContent = fmt(tax);
+    document.getElementById('r-pct-tax-' + id).textContent = fmtP(taxPct, 3);
+    document.getElementById('r-grand-' + id).textContent = fmt(grandTotal);
+    document.getElementById('r-badge-' + id).textContent = fmtP(marginPct, 0);
+
+    results?.classList.add('visible');
+
+    return { c, sellPrice, profit, tax, grandTotal };
+  }
+
+  function recalcAll() {
+    let totCost = 0, totSell = 0, totProfit = 0, totTax = 0, totGrand = 0;
+    let anyValid = false;
+
+    for (const id in areas) {
+      const r = calcArea(parseInt(id));
+      if (r) {
+        totCost += r.c;
+        totSell += r.sellPrice;
+        totProfit += r.profit;
+        totTax += r.tax;
+        totGrand += r.grandTotal;
+        anyValid = true;
+      }
+    }
+
+    const summary = document.getElementById('summary');
+    if (!anyValid || Object.keys(areas).length === 0) {
+      summary.style.display = 'none';
+      return;
+    }
+
+    summary.style.display = 'block';
+    document.getElementById('sum-cost').textContent = fmt(totCost);
+    document.getElementById('sum-profit').textContent = fmt(totProfit);
+    document.getElementById('sum-sell').textContent = fmt(totSell);
+    document.getElementById('sum-tax').textContent = fmt(totTax);
+    document.getElementById('sum-grand').textContent = fmt(totGrand);
+
+    const overallMargin = totSell > 0 ? (totProfit / totSell) * 100 : 0;
+    document.getElementById('sum-margin-badge').textContent = fmtP(overallMargin, 1);
+  }
+
+  // Start with one area
+  addArea();
+</script>
+</body>
+</html>
